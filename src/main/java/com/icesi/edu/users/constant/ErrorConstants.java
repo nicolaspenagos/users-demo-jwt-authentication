@@ -12,4 +12,9 @@ public class ErrorConstants {
     public static final String CODE_UD_11 = "User not found";
     public static final String CODE_UD_12 = "Password must contains at least: an upper case letter, a low case letter, a number and a symbol like #$%@";
     public static final String CODE_UD_13 = "The user must be authenticated to perform this request";
+    public static final String CODE_UD_14 = "Invalid email";
+    public static final String CODE_UD_15 = "Invalid password";
+    public static final String CODE_UD_16 = "You cannot request other user information";
 }
+
+

@@ -15,6 +15,11 @@ import java.util.Properties;
 
 public class PasswordValidator implements ConstraintValidator<CustomAnnotations.PasswordValidation, String> {
 
+
+    @Override
+    public void initialize(CustomAnnotations.PasswordValidation passwordValidation) {
+    }
+
     @SneakyThrows
     @Override
     public boolean isValid(String password, ConstraintValidatorContext context) {

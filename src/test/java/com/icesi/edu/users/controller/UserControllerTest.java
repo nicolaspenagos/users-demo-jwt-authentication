@@ -8,6 +8,7 @@ import com.icesi.edu.users.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -63,9 +64,17 @@ public class UserControllerTest {
     @Test
     public void getUserTest(){
 
-        userController.getUser(any());
+
         // getUser(UUID id) from userService has been called at 1 time
-        verify(userService, times(1)).getUser(any());
+        //verify(userService, times(1)).getUser(any());
+        try{
+            userController.getUser(UUID.fromString("123e4567-e89b-42d3-a456-556642440000"));
+        }catch (NoSuchElementException e){
+
+            assertNotNull(e);
+            //This means that auth validation was invoked
+            assertEquals(e.getMessage(), "No value present");
+        }
 
     }
 

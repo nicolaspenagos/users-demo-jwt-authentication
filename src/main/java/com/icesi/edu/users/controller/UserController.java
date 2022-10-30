@@ -8,6 +8,8 @@ import com.icesi.edu.users.dto.UserNoPassDTO;
 import com.icesi.edu.users.error.exception.UserDemoError;
 import com.icesi.edu.users.error.exception.UserDemoException;
 import com.icesi.edu.users.mapper.UserMapper;
+import com.icesi.edu.users.security.SecurityContext;
+import com.icesi.edu.users.security.SecurityContextHolder;
 import com.icesi.edu.users.service.UserService;
 import lombok.AllArgsConstructor;
 import org.passay.*;
@@ -17,10 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,13 +33,27 @@ public class UserController implements UserAPI {
 
     @Override
     public UserDTO getUser(UUID userId) {
+
+        validateAuthUser(userId);
         return userMapper.fromUser(userService.getUser(userId));
+    }
+
+    private void validateAuthUser(UUID userToGetID) {
+
+        UUID authUserId = SecurityContextHolder.getContext().getUserId();
+        System.out.println("auth        user\n"+authUserId.toString()+"=="+userToGetID.toString());
+       // Optional.ofNullable(userToGetID).stream().map(e->e.equals(userToGetID)).findFirst().orElseThrow(()-> new UserDemoException(HttpStatus.UNAUTHORIZED, new UserDemoError("CODE_13", ErrorConstants.CODE_UD_13)));
+        Optional.ofNullable(userToGetID).stream().anyMatch(authUserId::equals);
+        System.out.println(Optional.ofNullable(userToGetID).stream().anyMatch(authUserId::equals));
+        if(!Optional.ofNullable(userToGetID).stream().anyMatch(authUserId::equals)){
+            throw new UserDemoException(HttpStatus.UNAUTHORIZED, new UserDemoError("CODE_16", ErrorConstants.CODE_UD_16));
+        }
+
     }
 
     @Override
     public UserDTO createUser(@Valid UserDTO userDTO) {
 
-        //validatePassword(userDTO.getPassword());
         String validation = validateData(userDTO);
         if (validation.length() == 0) {
             return userMapper.fromUser(userService.createUser(userMapper.fromDTO(userDTO)));
@@ -49,40 +62,6 @@ public class UserController implements UserAPI {
             throw new UserDemoException(HttpStatus.BAD_REQUEST, new UserDemoError(validation.split("%")[0], validation.split("%")[1]));
         }
 
-
-    }
-
-    private void validatePassword(String password) {
-
-        Properties props = new Properties();
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("passay.properties");
-
-        try {
-
-            props.load(inputStream);
-            MessageResolver resolver = new PropertiesMessageResolver(props);
-            PasswordValidator passwordValidator = new PasswordValidator(resolver, Arrays.asList(
-                    // at least one upper-case character
-                    new CharacterRule(EnglishCharacterData.UpperCase, 1),
-                    // at least one lower-case character
-                    new CharacterRule(EnglishCharacterData.LowerCase, 1),
-                    // at least one digit character
-                    new CharacterRule(EnglishCharacterData.Digit, 1),
-                    // at least one symbol (special character)
-                    new CharacterRule(EnglishCharacterData.Special, 1))
-            );
-
-            RuleResult result = passwordValidator.validate(new PasswordData(password));
-
-            List<String> messages = passwordValidator.getMessages(result);
-            String messageTemplate = String.join(",", messages);
-            if(!result.isValid()){
-                throw new UserDemoException(HttpStatus.BAD_REQUEST, new UserDemoError("CODE_UD_12", messageTemplate));
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
     }
 
